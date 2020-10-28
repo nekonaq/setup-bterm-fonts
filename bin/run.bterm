@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+prog="${0##*/}"
+base_dir="$( me="$( realpath "$0" )"; realpath "${me%/*}/.." )"
+
+ensure_root() {
+  if [ "$( id -u )" != 0 ]; then
+    echo "$prog: You must be a root."
+    exit 1
+  fi
+}
+
+main() {
+  ensure_root
+
+  set -x
+  bterm -f "$base_dir/fonts/unifont.bgf" -l C.UTF-8 /bin/bash
+}
+
+main "$@"
+

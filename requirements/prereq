@@ -1,0 +1,48 @@
+#!/bin/sh
+#
+# Usage:
+#   ./prereq install
+#
+
+run__echo() {
+  echo "$@"
+}
+
+run__apt_install() {
+  ( set -x
+    apt-get install -y $@
+  )
+}
+
+main() {
+  local ID=
+  . /etc/os-release
+
+  local action=echo
+  if [ "$1" = --install ]; then
+    shift
+    case "$ID" in
+      ubuntu)
+        action=apt_install
+        ;;
+      # 現在は ubuntu のみ
+      *)
+        echo "$0: unknown linux distribution: $ID" >&2
+        exit 1
+        ;;
+    esac
+  fi
+
+  set -- "$@" "$(
+    cat "$0.$ID.yml" |
+      python3 -c '
+import sys, yaml
+names = [el if isinstance(el, (list, tuple)) else [el] for el in yaml.load(sys.stdin)["required_packages"]]
+print(" ".join([li for le in names for li in le]))
+'
+  )"
+
+  "run__$action" "$@"
+}
+
+main "$@"
